@@ -1,27 +1,23 @@
-from serpapi import GoogleSearch
+# utils/serpapi_search.py
+
 import os
-from dotenv import load_dotenv
+import requests
 
-load_dotenv()
-SERPAPI_KEY = os.getenv("SERPAPI_API_KEY")
+def search_product_on_google(url: str):
+    serpapi_key = os.getenv("SERPAPI_KEY")
+    if not serpapi_key:
+        raise ValueError("SERPAPI_KEY environment variable not set")
 
-def query_serpapi(product_input: str):
-    is_url = product_input.startswith("http")
-
-    search_params = {
+    params = {
         "engine": "google",
-        "q": product_input,
-        "google_domain": "google.com",
-        "gl": "tr",
-        "hl": "tr",
-        "api_key": SERPAPI_KEY,
+        "q": url,
+        "api_key": serpapi_key,
+        "num": "10",
         "device": "desktop"
     }
 
-    if not is_url:
-        search_params["tbm"] = "shop"
+    response = requests.get("https://serpapi.com/search", params=params)
+    if response.status_code != 200:
+        raise RuntimeError(f"SerpAPI failed: {response.text}")
 
-    search = GoogleSearch(search_params)
-    results = search.get_dict()
-
-    return results
+    return response.json()
