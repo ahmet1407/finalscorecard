@@ -1,32 +1,27 @@
-
+from serpapi import GoogleSearch
 import os
-import requests
+from dotenv import load_dotenv
 
-SERP_API_KEY = os.getenv("SERPAPI_API_KEY")
+load_dotenv()
+SERPAPI_KEY = os.getenv("SERPAPI_API_KEY")
 
-def search_product_on_google(query):
-    params = {
-        "engine": "google",  # Amazon değil, Google seçildi
-        "q": query,
-        "api_key": SERP_API_KEY
+def query_serpapi(product_input: str):
+    is_url = product_input.startswith("http")
+
+    search_params = {
+        "engine": "google",
+        "q": product_input,
+        "google_domain": "google.com",
+        "gl": "tr",
+        "hl": "tr",
+        "api_key": SERPAPI_KEY,
+        "device": "desktop"
     }
-    response = requests.get("https://serpapi.com/search", params=params, timeout=150)
-    response.raise_for_status()
-    data = response.json()
-    return data
 
+    if not is_url:
+        search_params["tbm"] = "shop"
 
-def extract_first_product_info(data):
-    try:
-        shopping_results = data.get("shopping_results", [])
-        if not shopping_results:
-            return None
-        first = shopping_results[0]
-        return {
-            "title": first.get("title"),
-            "link": first.get("link"),
-            "price": first.get("price"),
-            "source": first.get("source")
-        }
-    except Exception as e:
-        return {"error": str(e)}
+    search = GoogleSearch(search_params)
+    results = search.get_dict()
+
+    return results
